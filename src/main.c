@@ -4,6 +4,8 @@
 
 #include <app.h>
 
+#define __FILE_ID__ "main.c"
+
 int main()
 {
     LOG("test LOG %s", "c");
