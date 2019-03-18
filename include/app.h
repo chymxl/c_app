@@ -3,6 +3,6 @@
 
 #undef LOG
 #define LOG(format, arg...) \
-    printf("%s [%s] %u:" format"\n", __FILE_ID__,  __FUNCTION__, __LINE__, ##arg)
+    printf("%s %s %s [%s] %u:" format"\n", __DATE__, __TIME__, __FILE__,  __FUNCTION__, __LINE__, ##arg)
 
 #endif
