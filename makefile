@@ -44,3 +44,4 @@ $(warning 10)
 
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCLUDE)/*~
+	rm -f hellomake
