@@ -53,7 +53,7 @@ int user_register(const char *user_name, unsigned int age)
       RT_INVALID_TIME_SCOPE：时间段不合法
       RT_RESOURCE_NOT_ENOUGH: 资源超限
 *****************************************************************************/
-int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, enum AppType app_type)
+int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, AppType app_type)
 {
     return RT_NOT_IMPLEMENTED;
 }

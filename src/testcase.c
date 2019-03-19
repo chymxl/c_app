@@ -42,7 +42,7 @@ void TestAppSearch09()
 	ASSERT(RT_SUCCESS == app_register("welink", "00:00", "09:30", AppType_Work));
 	ASSERT(RT_SUCCESS == app_register("WeChat", "00:00", "09:30", AppType_Work));
 
-	AppInfo result[MAX_APP_INFO_CB_NUM] = {0};
+	struct AppInfo result[MAX_APP_INFO_CB_NUM] = {0};
 	unsigned int size = 0;
 	ASSERT(RT_INVALID_APP_NAME == app_search("WeLink2.0", result, &size));
 	ASSERT(size == 0);
@@ -66,7 +66,7 @@ void TestDelApp01()
     ASSERT(RT_SUCCESS == app_register("WeLink", "00:00", "09:30", AppType_Work));
 
     ASSERT(RT_SUCCESS == del_app("WeLink"));
-	AppInfo result[MAX_APP_INFO_CB_NUM] = {0};
+	struct AppInfo result[MAX_APP_INFO_CB_NUM] = {0};
 	unsigned int size = 0;
 	ASSERT(RT_APP_UNREGISTERED == app_search("WeLink", result, &size));
 	ASSERT(size == 0);

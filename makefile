@@ -1,6 +1,8 @@
-IDIR = ./include
+IDIR=./include
 CC=gcc
-CFLAGES=-I$(IDIR)
+#-Wall 生成所有警告信息
+#-g 生成调试信息，GNU调试器可用到该信息
+CFLAGES=-I$(IDIR) -Wall -g
 
 #http://www.cs.colby.edu/maxwell/courses/tutorials/maketutor/
 
@@ -24,18 +26,15 @@ LIBS=-lm
 #OBJ=$(patsubst %.c, %.o, $(DIR))
 #输出: a.o b.o s1.o s2.o
 
-_DEPS = app.h
-DEPS = $(patsubst %, $(IDIR)/%, $(_DEPS))
-
-_OBJ = main.o
+SRC = $(notdir $(wildcard ./src/*.c))
+_OBJ = $(patsubst %.c, %.o, $(SRC))
 OBJ = $(patsubst %, $(ODIR)/%, $(_OBJ))
 
-_SRC = main.c
-SRCDIR=./src
-SRC = $(patsubst %, $(SRCDIR)/%, $(_SRC))
 $(warning $(SRC))
-$(ODIR)/%.o: $(SRC) $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGES)
+$(warning $(OBJ))
+SRCDIR=./src
+$(ODIR)/%.o: $(SRCDIR)/%.c
+	$(CC) -c $^ -o $@ $(CFLAGES)
 $(warning 9)
 # $@:目标文件，$^:所有依赖文件，$<:第一个依赖文件
 hellomake: $(OBJ)

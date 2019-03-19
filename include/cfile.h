@@ -55,12 +55,12 @@ enum TReturnCode
 };
 
 /* App类型 */
-enum AppType
+typedef enum
 {
     AppType_Work,        /* 工作 */
     APPType_Study,        /* 学习 */
     APPType_Recreation  /* 娱乐 */
-};
+}AppType;
 
 /* 时间 */
 struct AASTime
@@ -81,7 +81,7 @@ struct AppInfo
 {
     char name[32];                    /* App名称 */
     struct AASTimeSeg limit_time;    /* App限制使用时间段 */
-    enum AppType app_type;            /* App类型 */
+    AppType app_type;            /* App类型 */
 };
 
 /* 用户信息 */
@@ -146,7 +146,7 @@ int user_register(const char *user_name, unsigned int age);
       RT_INVALID_TIME_SCOPE：时间段不合法
       RT_RESOURCE_NOT_ENOUGH: 资源超限
 *****************************************************************************/
-int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, enum AppType app_type);
+int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, AppType app_type);
 
 
 /*****************************************************************************
