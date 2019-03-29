@@ -3,19 +3,45 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <regex.h>
+
 #include <app.h>
+
+#include <cfile.h>
 
 #define __FILE_ID__ "main.c"
 
+#pragma pack(push)
+#pragma pack(1)
+typedef struct
+{
+    double d;
+    int age;
+    char ch;
+    double d1;
+    short sh;
+}Student;
+
+typedef struct
+{
+    
+    char ch;
+    short sh;
+    int age;
+    double d;
+    double d1;
+}Student1;
+#pragma pack(pop)
+
+typedef struct
+{
+    int age;
+    char description[0]
+}Student2;
+
+
 int main()
 {
-    int hour, minute, seconds;
-    int ret;
-
-    ret = sscanf("15:20:30", "%d:%d:%d", &hour, &minute, &seconds);
-    LOG("hour=%d, minute=%d, seconds=%d", hour, minute, seconds);
-    
-    LOG("test LOG %s", "c");
-    LOG("test %u", isalnum('2'));
+    AAS_TestCase();
     return 0;
 }

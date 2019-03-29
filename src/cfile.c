@@ -1,6 +1,28 @@
 #include "cfile.h"
 
+struct AppUser g_AppUser = {0};
 
+int g_UserStatus = 0;
+
+
+typedef struct stApp
+{
+    struct AppInfo appInfo;
+    struct AppUsePlanningInfo appUserPlanningInfo;
+}App;
+
+App g_Apps[MAX_APP_INFO_CB_NUM];
+
+int g_AppNum = 0;
+
+#define LOG(format, args...) \
+printf("%s %s %d:" format "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
+
+#define EXIT(format , args...) \
+printf("%s %s %d:EXIT " format "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
+
+#define false 0
+#define true 1
 
 /*****************************************************************************
 函 数 名  : sys_init
@@ -13,7 +35,49 @@
 *****************************************************************************/
 int sys_init()
 {
-    return RT_NOT_IMPLEMENTED;
+    memset(&g_AppUser, 0, sizeof(g_AppUser));
+    memset(g_Apps, 0, sizeof(g_Apps));
+    g_AppNum = 0;
+    g_UserStatus = 0;
+    return RT_SUCCESS;
+}
+int name_Check(const char *name)
+{
+    int i = 0;
+    int userNameLen = 0;
+
+    if (NULL == name)
+    {
+        EXIT("1");
+        return false;
+    }
+
+    userNameLen = strlen(name);
+
+    if (userNameLen == 0 || 30 < userNameLen)
+    {
+        EXIT("2");
+        return false;
+    }
+    
+    for (i = 0; i < userNameLen; i++)
+    {
+        if (('0' <= name[i] && '9' >= name[i]) ||
+            ('a' <= name[i] && 'z' >= name[i]) ||
+            ('A' <= name[i] && 'Z' >= name[i]))
+        {
+            continue;
+        }
+        else
+        {
+            EXIT("3 name[%d]=%c", i, name[i]);
+            return false;
+        }
+        
+    }
+
+    EXIT("4");
+    return true;
 }
 
 /*****************************************************************************
@@ -31,7 +95,70 @@ int sys_init()
 *****************************************************************************/
 int user_register(const char *user_name, unsigned int age)
 {
-    return RT_NOT_IMPLEMENTED;
+    int userNameLen = 0;
+    
+    if (1 == g_UserStatus)
+    {
+        EXIT("1");
+        return RT_USER_REGISTERED;
+    }
+
+    if (false == name_Check(user_name))
+    {
+        EXIT("2");
+        return RT_INVALID_USER_NAME;
+    }
+    
+    g_AppUser.age = age;
+    memset(g_AppUser.name, 0, sizeof(g_AppUser.name));
+    memcpy(g_AppUser.name, user_name, userNameLen);
+    g_UserStatus = 1;
+
+    EXIT("3");
+    return RT_SUCCESS;
+}
+
+int time_Check(const char *time, int *hour, int *minute)
+{
+    if (NULL == time || NULL == hour || NULL == minute)
+    {
+        EXIT("1");
+        return false;
+    }
+
+    if (5 != strlen(time))
+    {
+        EXIT("2");
+        return false;
+    }
+
+    if (('0' <= time[0] && '2' >= time[0]) &&
+        ('0' <= time[1] && '9' >= time[1]) &&
+        (':' == time[2]) &&
+        ('0' <= time[3] && '5' >= time[3]) &&
+        ('0' <= time[4] && '9' >= time[4]))
+    {
+        LOG("time string check ok");
+    }
+    else
+    {
+        EXIT("3");
+        return false;
+    }
+    
+
+    *hour = ((int)time[0] - '0') * 10 + ((int)time[1] - '0');
+    *minute = ((int)time[3] - '0')  * 10 + ((int)time[4] - '0');
+
+    if (24 < *hour || 59 < *minute)
+    {
+        LOG("hour=%d, minute=%d", *hour, *minute);
+        EXIT("4");
+        return false;
+    }
+    
+    EXIT("5");
+    return true;    
 }
 
 /*****************************************************************************
@@ -55,10 +182,84 @@ int user_register(const char *user_name, unsigned int age)
 *****************************************************************************/
 int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, AppType app_type)
 {
-    return RT_NOT_IMPLEMENTED;
+    int i = 0;
+    int startHour  = 0;
+    int startMinute= 0;
+    int endHour    = 0;
+    int endMinute  = 0;
+    int startTime  = 0;
+    int endTime    = 0;
+
+    struct AppInfo *app = NULL;
+
+    if (false == name_Check(app_name))
+    {
+        EXIT("1");
+        return RT_INVALID_APP_NAME;
+    }
+
+    for (i = 0; i < g_AppNum; i++)
+    {
+        if (strlen(app_name) == strlen(g_Apps[i].appInfo.name) &&
+            0 == strcmp(app_name, g_Apps[i].appInfo.name))
+        {
+            EXIT("2");
+            return RT_APP_REGISTERED;
+        }
+    }
+
+    if (false == time_Check(limit_time_start, &startHour, &startMinute))
+    {
+        EXIT("3");
+        return RT_INVALID_START_TIME;
+    }
+
+    if (false == time_Check(limit_time_end, &endHour, &endMinute))
+    {
+        EXIT("4");
+        return RT_INVALID_END_TIME;
+    }
+
+    startTime = startHour * 60 + startMinute;
+    endTime   = endHour   * 60 + endMinute;
+
+    if (startTime >= endTime)
+    {
+        EXIT("5");
+        return RT_INVALID_TIME_SCOPE;
+    }
+
+    if (100 < g_AppNum)
+    {
+        EXIT("6");
+        return RT_RESOURCE_NOT_ENOUGH;
+    }
+
+    app = &(g_Apps[g_AppNum].appInfo);
+    app->app_type = app_type;
+    memset(app->name, 0, sizeof(app->name));
+    memcpy(app->name, app_name, strlen(app_name));
+    app->limit_time.start.hour   = (char)startHour;
+    app->limit_time.start.minute = (char)startMinute;
+    app->limit_time.end.hour     = (char)endHour;
+    app->limit_time.end.minute   = (char)endMinute;
+    g_AppNum++;
+
+    return RT_SUCCESS;
 }
 
+int myCompare(const void *a, const void *b)
+{
+    struct AppInfo *app1;
+    struct AppInfo *app2;
 
+    app1 = (struct AppInfo *)a;
+    app2 = (struct AppInfo *)b;
+
+    LOG("app1->name=%s, app2->name=%s", app1->name, app2->name);
+
+    return strcmp(app1->name, app2->name);
+}
 /*****************************************************************************
 函 数 名  : app_search
 功能：根据app名称，检索已经注册的App信息，支持简单的模糊查询。
@@ -73,7 +274,45 @@ int app_register(const char *app_name, const char *limit_time_start, const char 
 *****************************************************************************/
 int app_search(const char *app_name, struct AppInfo *result, unsigned int *size)
 {
-    return RT_NOT_IMPLEMENTED;
+    int i = 0;
+
+    if (NULL == app_name || NULL == result || NULL == size)
+    {
+        EXIT("1");
+        return RT_INVALID_APP_NAME;
+    }
+    if (false == name_Check(app_name))
+    {
+        EXIT("2");
+        return RT_INVALID_APP_NAME;
+    }
+
+    *size = 0;
+    
+    for (i = 0; i < g_AppNum; i++)
+    {
+        if (0 != strstr(g_Apps[i].appInfo.name, app_name))
+        {
+            LOG("*****");
+            memset(result + i, 0, sizeof(struct AppInfo));
+            memcpy(result + i, &(g_Apps[i].appInfo), sizeof(struct AppInfo));
+            (*size)++;
+        }
+    }
+
+    for (i = 0; i < *size; i++)
+    {
+        LOG("result[%d].name=%s", i, (result + i)->name);
+    }
+
+    qsort(result, *size, 30, myCompare);
+
+    for (i = 0; i < *size; i++)
+    {
+        LOG("result[%d].name=%s", i, (result + i)->name);
+    }
+
+    return RT_SUCCESS;
 }
 
 /*****************************************************************************
@@ -88,7 +327,32 @@ int app_search(const char *app_name, struct AppInfo *result, unsigned int *size)
 *****************************************************************************/
 int del_app(const char *app_name)
 {
-    return RT_NOT_IMPLEMENTED;
+    int i = 0;
+
+    if (NULL == app_name)
+    {
+        EXIT("1");
+        return RT_NOT_IMPLEMENTED;
+    }
+
+    if (false == name_Check(app_name))
+    {
+        EXIT("2");
+        return RT_INVALID_APP_NAME;
+    }
+
+    for (i = 0; i < g_AppNum; i++)
+    {
+        if (strlen(app_name) == strlen(g_Apps[i].appInfo.name) &&
+            0 == strcmp(g_Apps[i].appInfo.name, app_name))
+        {
+            memmove(&(g_Apps[i]), &(g_Apps[i + 1]), sizeof(App) * (g_AppNum - i - 1));
+            memset(&(g_Apps[g_AppNum - 1]), 0 , sizeof(App));
+            g_AppNum--;
+        }
+    }
+
+    return RT_SUCCESS;
 }
 
 /*****************************************************************************
