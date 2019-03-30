@@ -3,8 +3,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <regex.h>
-
 #include <app.h>
 
 #include <cfile.h>
@@ -36,7 +34,7 @@ typedef struct
 typedef struct
 {
     int age;
-    char description[0]
+    char description[0];
 }Student2;
 
 

@@ -37,7 +37,7 @@ $(ODIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c $^ -o $@ $(CFLAGES)
 $(warning 9)
 # $@:目标文件，$^:所有依赖文件，$<:第一个依赖文件
-hellomake: $(OBJ)
+hellomake.exe: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
 $(warning 10)
 .PHONY: clean

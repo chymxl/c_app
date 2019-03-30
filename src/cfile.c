@@ -161,6 +161,51 @@ int time_Check(const char *time, int *hour, int *minute)
     return true;    
 }
 
+int time_start_end_check(const char *limit_time_start, const char *limit_time_end, struct AASTimeSeg *time_seg)
+{
+    int startHour  = 0;
+    int startMinute= 0;
+    int endHour    = 0;
+    int endMinute  = 0;
+    int startTime  = 0;
+    int endTime    = 0;
+
+    if (NULL == time_seg)
+    {
+        EXIT("1");
+        return RT_FAILED;
+    }
+    
+    if (false == time_Check(limit_time_start, &startHour, &startMinute))
+    {
+        EXIT("2");
+        return RT_INVALID_START_TIME;
+    }
+
+    if (false == time_Check(limit_time_end, &endHour, &endMinute))
+    {
+        EXIT("3");
+        return RT_INVALID_END_TIME;
+    }
+
+    startTime = startHour * 60 + startMinute;
+    endTime   = endHour   * 60 + endMinute;
+
+    if (startTime >= endTime)
+    {
+        EXIT("4");
+        return RT_INVALID_TIME_SCOPE;
+    }
+
+    time_seg->start.hour   = (char)startHour;
+    time_seg->start.minute = (char)startMinute;
+    time_seg->end.hour     = (char)endHour;
+    time_seg->end.minute   = (char)endMinute;
+
+    EXIT("5");
+    return RT_SUCCESS;
+}
+
 /*****************************************************************************
 函 数 名  : app_register
 功能：注册App信息，包括限制时段、App类型等。
@@ -182,13 +227,8 @@ int time_Check(const char *time, int *hour, int *minute)
 *****************************************************************************/
 int app_register(const char *app_name, const char *limit_time_start, const char *limit_time_end, AppType app_type)
 {
-    int i = 0;
-    int startHour  = 0;
-    int startMinute= 0;
-    int endHour    = 0;
-    int endMinute  = 0;
-    int startTime  = 0;
-    int endTime    = 0;
+    int i   = 0;
+    int ret = 0;
 
     struct AppInfo *app = NULL;
 
@@ -208,41 +248,24 @@ int app_register(const char *app_name, const char *limit_time_start, const char 
         }
     }
 
-    if (false == time_Check(limit_time_start, &startHour, &startMinute))
-    {
-        EXIT("3");
-        return RT_INVALID_START_TIME;
-    }
-
-    if (false == time_Check(limit_time_end, &endHour, &endMinute))
-    {
-        EXIT("4");
-        return RT_INVALID_END_TIME;
-    }
-
-    startTime = startHour * 60 + startMinute;
-    endTime   = endHour   * 60 + endMinute;
-
-    if (startTime >= endTime)
-    {
-        EXIT("5");
-        return RT_INVALID_TIME_SCOPE;
-    }
-
     if (100 < g_AppNum)
     {
-        EXIT("6");
+        EXIT("3");
         return RT_RESOURCE_NOT_ENOUGH;
     }
 
     app = &(g_Apps[g_AppNum].appInfo);
+
+    ret = time_start_end_check(limit_time_start, limit_time_end, &(app->limit_time));
+
+    if (RT_SUCCESS != ret)
+    {
+        EXIT("4");
+        return ret;
+    }
     app->app_type = app_type;
     memset(app->name, 0, sizeof(app->name));
     memcpy(app->name, app_name, strlen(app_name));
-    app->limit_time.start.hour   = (char)startHour;
-    app->limit_time.start.minute = (char)startMinute;
-    app->limit_time.end.hour     = (char)endHour;
-    app->limit_time.end.minute   = (char)endMinute;
     g_AppNum++;
 
     return RT_SUCCESS;
@@ -293,24 +316,19 @@ int app_search(const char *app_name, struct AppInfo *result, unsigned int *size)
     {
         if (0 != strstr(g_Apps[i].appInfo.name, app_name))
         {
-            LOG("*****");
             memset(result + i, 0, sizeof(struct AppInfo));
             memcpy(result + i, &(g_Apps[i].appInfo), sizeof(struct AppInfo));
             (*size)++;
         }
     }
 
-    for (i = 0; i < *size; i++)
+    if (0 == *size)
     {
-        LOG("result[%d].name=%s", i, (result + i)->name);
+        EXIT("3");
+        return RT_APP_UNREGISTERED;
     }
 
-    qsort(result, *size, 30, myCompare);
-
-    for (i = 0; i < *size; i++)
-    {
-        LOG("result[%d].name=%s", i, (result + i)->name);
-    }
+    qsort(result, *size, sizeof(struct AppInfo), myCompare);
 
     return RT_SUCCESS;
 }
@@ -378,5 +396,17 @@ int del_app(const char *app_name)
 *****************************************************************************/
 int app_use_planning(const char *app_name, const char *use_time_start, const char *use_time_end, struct AppUsePlanningInfo *result, unsigned int *size)
 {
+    
+    if ( 0 == g_UserStatus)
+    {
+        EXIT("1");
+        return RT_USER_UNREGISTERED;
+    }
+
+    if (NULL == app_name || false == name_Check(app_name))
+    {
+        EXIT("2");
+        return RT_INVALID_APP_NAME;
+    }
     return RT_NOT_IMPLEMENTED;
 }
