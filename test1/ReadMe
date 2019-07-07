@@ -1,0 +1,9 @@
+1. vscode安装cmake tool
+2. 根目录下编写CMakeLists.txt
+3. Ctrl+Shift+P，输入cmake，选择camke:configure。选择cmake kits（选择gcc）
+4. 点击vscode左下角Build，build目录下会生成可执行文件
+5. 安装c++插件。Ctrl+Shift+P输入C++，选择C/C++:Edit Configurations(JSON),在Configurations的子节点插入 "configurationProvider": "vector-of-bool.cmake-tools"
+6. 添加task：Ctrl+Shift+P输入Tasks:Configure Task, Windows下添加"windows": {
+                "command": ".\\build\\test1.exe"
+            }
+7. debug:点击vscode左侧debug按钮，点击添加配置，选择gdb。将launch.json中program替换为 "${command:cmake.launchTargetPath}"， miDebuggerPath替换为gdb所在路径
